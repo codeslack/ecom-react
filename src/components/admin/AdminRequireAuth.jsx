@@ -5,7 +5,7 @@ import {AdminAuthContext} from "../context/AdminAuth";
 export const AdminRequireAuth = ({ children }) => {
     const { user } = useContext(AdminAuthContext)
 
-    console.log('useruser', user);
+    console.log('user', user);
 
     if (!user) {
         return <Navigate to={`/admin/login`} />
