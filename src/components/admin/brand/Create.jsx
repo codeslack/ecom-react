@@ -1,52 +1,27 @@
 import React, { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import Layout from '../../common/Layout'
+import Sidebar from '../../common/Sidebar'
+import { Link, useNavigate } from 'react-router-dom'
 import { adminToken, apiUrl } from '../../common/http';
+import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify';
-import Sidebar from '../../common/Sidebar';
-import { useForm } from 'react-hook-form';
-import Layout from '../../common/Layout';
 
-const Edit = () => {
+const Create = () => {
     const [disabled, setDisable] = useState(false)
-    const [category, setCategory] = useState([])
     const navigate = useNavigate()
-    const params = useParams()
     const {
         register,
         handleSubmit,
-        reset,
         watch,
         formState: { errors },
-    } = useForm({
-        defaultValues: async () => {
-            const res = await fetch(`${apiUrl}/categories/${params.id}`, {
-                method: 'GET',
-                headers: {
-                    'Content-type' : 'application/json',
-                    'Accept' : 'application/json',
-                    'Authorization' : `Bearer ${adminToken()}`
-                }
-            })
-            .then(res => res.json())
-            .then(result => {
-                console.log(result.data)
-                if (result.status === 200) {
-                    setCategory(result.data)
-                    reset({
-                        name: result.data.name,
-                        status: result.data.status
-                    })
-                } else {
-                    toast.error(result.message)
-                }   
-            })
-        }
-    });
+    } = useForm();
 
-    const updateCategory = async(data) => {
+    const saveBrand = async(data) => {
         setDisable(true)
-        const res = await fetch(`${apiUrl}/categories/${params.id}`, {
-            method: 'PUT',
+        console.log(data)
+
+        const res = await fetch(`${apiUrl}/brands`, {
+            method: 'POST',
             headers: {
                 'Content-type' : 'application/json',
                 'Accept' : 'application/json',
@@ -60,7 +35,7 @@ const Edit = () => {
 
             if (result.status === 200) {
                 toast.success(result.message)
-                navigate('/admin/categories')
+                navigate('/admin/brands')
             } else {
                 toast.error(result.message)
             }
@@ -72,8 +47,8 @@ const Edit = () => {
 			<div className="container">
 				<div className="row">
 					<div className="d-flex justify-content-between mt-5 pb-3">
-						<h4 className="h4 pb-0 mb-0">Categories / Edit</h4>
-                        <Link to="/admin/categories" className='btn btn-primary'>Back</Link>
+						<h4 className="h4 pb-0 mb-0">Brands / Create</h4>
+                        <Link to="/admin/brands" className='btn btn-primary'>Back</Link>
 					</div>
 
 					<div className="col-md-3">
@@ -81,7 +56,7 @@ const Edit = () => {
 					</div>
 
 					<div className="col-md-9">
-						<form onSubmit={handleSubmit(updateCategory)}>
+						<form onSubmit={handleSubmit(saveBrand)}>
                             <div className="card shadow">
                                 <div className="card-body p-4">
                                     <div className="mb-3">
@@ -118,7 +93,7 @@ const Edit = () => {
                             <button 
                                 disabled={disabled}
                                 className="btn btn-primary mt-3"
-                            >Update</button>
+                            >Create</button>
                         </form>
 
 					</div>
@@ -128,4 +103,4 @@ const Edit = () => {
     )
 }
 
-export default Edit
+export default Create

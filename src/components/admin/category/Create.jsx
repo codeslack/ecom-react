@@ -56,7 +56,7 @@ const Create = () => {
 					</div>
 
 					<div className="col-md-9">
-						<form onClick={handleSubmit(saveCategory)}>
+						<form onSubmit={handleSubmit(saveCategory)}>
                             <div className="card shadow">
                                 <div className="card-body p-4">
                                     <div className="mb-3">

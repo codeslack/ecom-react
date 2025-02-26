@@ -8,7 +8,7 @@ import Layout from '../../common/Layout';
 
 const Edit = () => {
     const [disabled, setDisable] = useState(false)
-    const [category, setCategory] = useState([])
+    const [brand, setBrand] = useState([])
     const navigate = useNavigate()
     const params = useParams()
     const {
@@ -19,7 +19,7 @@ const Edit = () => {
         formState: { errors },
     } = useForm({
         defaultValues: async () => {
-            const res = await fetch(`${apiUrl}/categories/${params.id}`, {
+            const res = await fetch(`${apiUrl}/brands/${params.id}`, {
                 method: 'GET',
                 headers: {
                     'Content-type' : 'application/json',
@@ -31,7 +31,7 @@ const Edit = () => {
             .then(result => {
                 console.log(result.data)
                 if (result.status === 200) {
-                    setCategory(result.data)
+                    setBrand(result.data)
                     reset({
                         name: result.data.name,
                         status: result.data.status
@@ -43,9 +43,9 @@ const Edit = () => {
         }
     });
 
-    const updateCategory = async(data) => {
+    const updateBrand = async(data) => {
         setDisable(true)
-        const res = await fetch(`${apiUrl}/categories/${params.id}`, {
+        const res = await fetch(`${apiUrl}/brands/${params.id}`, {
             method: 'PUT',
             headers: {
                 'Content-type' : 'application/json',
@@ -60,7 +60,7 @@ const Edit = () => {
 
             if (result.status === 200) {
                 toast.success(result.message)
-                navigate('/admin/categories')
+                navigate('/admin/brands')
             } else {
                 toast.error(result.message)
             }
@@ -72,8 +72,8 @@ const Edit = () => {
 			<div className="container">
 				<div className="row">
 					<div className="d-flex justify-content-between mt-5 pb-3">
-						<h4 className="h4 pb-0 mb-0">Categories / Edit</h4>
-                        <Link to="/admin/categories" className='btn btn-primary'>Back</Link>
+						<h4 className="h4 pb-0 mb-0">Brands / Edit</h4>
+                        <Link to="/admin/brands" className='btn btn-primary'>Back</Link>
 					</div>
 
 					<div className="col-md-3">
@@ -81,7 +81,7 @@ const Edit = () => {
 					</div>
 
 					<div className="col-md-9">
-						<form onSubmit={handleSubmit(updateCategory)}>
+						<form onSubmit={handleSubmit(updateBrand)}>
                             <div className="card shadow">
                                 <div className="card-body p-4">
                                     <div className="mb-3">
