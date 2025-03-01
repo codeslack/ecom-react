@@ -12,6 +12,8 @@ const Edit = ({ placeholder }) => {
     const [products, setProducts] = useState([])
     const [categories, setCategories] = useState([])
     const [brands, setBrands] = useState([])
+    const [sizes, setSizes] = useState([])
+    const [sizesChecked, setSizesChecked] = useState([])
     const [gallery, setGallery] = useState([])
     const [galleryImages, setGalleryImages] = useState([])
     const [productImages, setProductImages] = useState([])
@@ -50,8 +52,9 @@ const Edit = ({ placeholder }) => {
             .then(result => {
                 console.log(result.data)
                 if (result.status === 200) {
-                    // setProducts(result.data)
-                    setProductImages(result.data.product_images)
+                    setProductImages(result.data.product_images);
+                    setSizesChecked(result.productSizes);
+                    setContent(result.data.description);
                     reset({
                         title: result.data.title,
                         category: result.data.category_id,
@@ -77,10 +80,10 @@ const Edit = ({ placeholder }) => {
         setDisable(true)
         console.log(data)
 
-        const formData = {...data, 'description' : content, 'gallery' : gallery}
+        const formData = {...data, 'description' : content}
 
-        const res = await fetch(`${apiUrl}/products`, {
-            method: 'POST',
+        const res = await fetch(`${apiUrl}/products/${params.id}`, {
+            method: 'PUT',
             headers: {
                 'Content-type' : 'application/json',
                 'Accept' : 'application/json',
@@ -108,9 +111,10 @@ const Edit = ({ placeholder }) => {
         const formData = new FormData();
         const file = e.target.files[0];
         formData.append('image', file);
+        formData.append('product_id', params.id);
         setDisable(true)
 
-        const res = await fetch(`${apiUrl}/temp-images`, {
+        const res = await fetch(`${apiUrl}/save-product-image`, {
             method: 'POST',
             headers: {
                 'Accept' : 'application/json',
@@ -120,14 +124,17 @@ const Edit = ({ placeholder }) => {
         })
         .then(res => res.json())
         .then(result => {
-            gallery.push(result.data.id)
-            setGallery(gallery)
+            
+            if (result.status === 200) {
+                productImages.push(result.data)
+                setProductImages(productImages)
 
-            galleryImages.push(result.data.image_url)
-            setGalleryImages(galleryImages)
+                toast.success(result.message)
+            } else {
+                toast.error(result.errors.image[0])
+            }
 
             setDisable(false)
-            toast.success(result.message)
             e.target.value = null
         })
     }
@@ -162,14 +169,67 @@ const Edit = ({ placeholder }) => {
         })
     }
 
-    const deleteImage = (image) => {
-        const newGallery = galleryImages.filter((img) => img !== image)
-        setGalleryImages(newGallery)
-    }        
+    const fetchSizes = async () => {
+        const res = await fetch(`${apiUrl}/sizes`, {
+            method: 'GET',
+            headers: {
+                'Content-type' : 'application/json',
+                'Accept' : 'application/json',
+                'Authorization' : `Bearer ${adminToken()}`
+            }
+        })
+        .then(res => res.json())
+        .then(result => {
+            setSizes(result.data)           
+        })
+    }
+
+    const deleteImage = async (id) => {
+        const res = await fetch(`${apiUrl}/delete-product-image/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-type' : 'application/json',
+                'Accept' : 'application/json',
+                'Authorization' : `Bearer ${adminToken()}`
+            }
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.status === 200) {
+                const newProductImages = productImages.filter((productImage) => productImage.id !== id)
+                setProductImages(newProductImages)
+                toast.success(result.message)
+            } else {
+                toast.success(result.message)
+            }            
+        })        
+    }
+    
+    const changeImage = async (image) => {
+        //change-product-default-image
+        const res = await fetch(`${apiUrl}/change-product-default-image?product_id=${params.id}&image=${image}`, {
+            method: 'GET',
+            headers: {
+                'Content-type' : 'application/json',
+                'Accept' : 'application/json',
+                'Authorization' : `Bearer ${adminToken()}`
+            }
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.status === 200) {
+                toast.success(result.message)
+            } else {
+                // toast.error(result.errors)
+                console.log('something went wrong');
+            }
+        })
+    }
 
     useEffect(() => {
         fetchCategories();
         fetchBrands();
+        fetchSizes();
     }, [])
 
     return (
@@ -362,6 +422,43 @@ const Edit = ({ placeholder }) => {
                                         </select>
                                     </div>
 
+                                    <h3 className="py-3 border-bottom mb-3">Sizes</h3>
+
+                                    <div className="mb-3">
+                                        {
+                                            sizes && sizes.map(size => {
+                                                return (
+                                                    <div className="form-check-inline ps-2" key={`product-size-${size.id}`}>
+                                                        <input
+                                                            {
+                                                                ...register('sizes')
+                                                            }
+                                                            checked={sizesChecked.includes(size.id)}
+                                                            onChange={ (e) => {
+                                                                if (e.target.checked) {
+                                                                    setSizesChecked([...sizesChecked, size.id])
+                                                                } else {
+                                                                    setSizesChecked(sizesChecked.filter(sid => sid != size.id))
+                                                                }
+                                                            }}
+                                                            type="checkbox" 
+                                                            className="form-check-input" 
+                                                            id={`size-${size.id}`}
+                                                            value={size.id} 
+                                                        />
+                                                        <label 
+                                                            htmlFor={`size-${size.id}`} 
+                                                            className="form-check-label ps-2"
+                                                        >
+                                                            {size.name}
+                                                        </label>
+                                                    </div>
+                                                )
+                                            })
+                                        }
+                                        
+                                    </div>
+
                                     <h3 className="py-3 border-bottom mb-3">Gallery</h3>
 
                                     <div className="mb-3">
@@ -380,7 +477,8 @@ const Edit = ({ placeholder }) => {
                                                             <div className="card shadow">
                                                                 <img src={productImage.image_url} alt="" className="img-fluid" />                                                                
                                                             </div>
-                                                            <button className='btn btn-danger mt-3 w-100' onClick={ () => deleteImage(productImage)}>Delete</button>
+                                                            <button type="button" className='btn btn-danger mt-3 w-100' onClick={ () => deleteImage(productImage.id)}>Delete</button>
+                                                            <button type="button" className='btn btn-secondary mt-3 w-100' onClick={ () => changeImage(productImage.image)}>Set as Default</button>
                                                         </div>
                                                     )
                                                 })

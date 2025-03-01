@@ -11,6 +11,8 @@ const Create = ({ placeholder }) => {
     const [disabled, setDisable] = useState(false)
     const [categories, setCategories] = useState([])
     const [brands, setBrands] = useState([])
+    const [sizes, setSizes] = useState([])
+    const [sizesChecked, setSizesChecked] = useState([])
     const [gallery, setGallery] = useState([])
     const [galleryImages, setGalleryImages] = useState([])
     
@@ -81,14 +83,19 @@ const Create = ({ placeholder }) => {
         })
         .then(res => res.json())
         .then(result => {
-            gallery.push(result.data.id)
-            setGallery(gallery)
+            if (result.status === 200) {
+                gallery.push(result.data.id)
+                setGallery(gallery)
 
-            galleryImages.push(result.data.image_url)
-            setGalleryImages(galleryImages)
+                galleryImages.push(result.data.image_url)
+                setGalleryImages(galleryImages)
 
-            setDisable(false)
-            toast.success(result.message)
+                toast.success(result.message)
+            } else {
+                toast.error(result.errors.image[0])
+            }
+
+            setDisable(false)            
             e.target.value = null
         })
     }
@@ -123,6 +130,21 @@ const Create = ({ placeholder }) => {
         })
     }
 
+    const fetchSizes = async () => {
+        const res = await fetch(`${apiUrl}/sizes`, {
+            method: 'GET',
+            headers: {
+                'Content-type' : 'application/json',
+                'Accept' : 'application/json',
+                'Authorization' : `Bearer ${adminToken()}`
+            }
+        })
+        .then(res => res.json())
+        .then(result => {
+            setSizes(result.data)           
+        })
+    }
+
     const deleteImage = (image) => {
         const newGallery = galleryImages.filter((img) => img !== image)
         setGalleryImages(newGallery)
@@ -131,6 +153,7 @@ const Create = ({ placeholder }) => {
     useEffect(() => {
         fetchCategories();
         fetchBrands();
+        fetchSizes();
     }, [])
 
     return (
@@ -321,6 +344,43 @@ const Create = ({ placeholder }) => {
                                             <option value="no">No</option>
                                             <option value="yes">Yes</option>
                                         </select>
+                                    </div>
+
+                                    <h3 className="py-3 border-bottom mb-3">Sizes</h3>
+
+                                    <div className="mb-3">
+                                        {
+                                            sizes && sizes.map(size => {
+                                                return (
+                                                    <div className="form-check-inline ps-2" key={`product-size-${size.id}`}>
+                                                        <input
+                                                            {
+                                                                ...register('sizes')
+                                                            }
+                                                            checked={sizesChecked.includes(size.id)}
+                                                            onChange={ (e) => {
+                                                                if (e.target.checked) {
+                                                                    setSizesChecked([...sizesChecked, size.id])
+                                                                } else {
+                                                                    setSizesChecked(sizesChecked.filter(sid => sid != size.id))
+                                                                }
+                                                            }}
+                                                            type="checkbox" 
+                                                            className="form-check-input" 
+                                                            id={`size-${size.id}`}
+                                                            value={size.id} 
+                                                        />
+                                                        <label 
+                                                            htmlFor={`size-${size.id}`} 
+                                                            className="form-check-label ps-2"
+                                                        >
+                                                            {size.name}
+                                                        </label>
+                                                    </div>
+                                                )
+                                            })
+                                        }
+                                        
                                     </div>
 
                                     <h3 className="py-3 border-bottom mb-3">Gallery</h3>
