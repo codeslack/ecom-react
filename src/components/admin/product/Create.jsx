@@ -11,6 +11,9 @@ const Create = ({ placeholder }) => {
     const [disabled, setDisable] = useState(false)
     const [categories, setCategories] = useState([])
     const [brands, setBrands] = useState([])
+    const [gallery, setGallery] = useState([])
+    const [galleryImages, setGalleryImages] = useState([])
+    
     const navigate = useNavigate();
 
     const editor = useRef(null);
@@ -35,7 +38,7 @@ const Create = ({ placeholder }) => {
         setDisable(true)
         console.log(data)
 
-        const formData = {...data, 'description' : content}
+        const formData = {...data, 'description' : content, 'gallery' : gallery}
 
         const res = await fetch(`${apiUrl}/products`, {
             method: 'POST',
@@ -59,6 +62,34 @@ const Create = ({ placeholder }) => {
                     setError(field, {message: formErrors[field][0]});
                 })
             }
+        })
+    }
+
+    const handleFileChange = async (e) => {
+        const formData = new FormData();
+        const file = e.target.files[0];
+        formData.append('image', file);
+        setDisable(true)
+
+        const res = await fetch(`${apiUrl}/temp-images`, {
+            method: 'POST',
+            headers: {
+                'Accept' : 'application/json',
+                'Authorization' : `Bearer ${adminToken()}`
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(result => {
+            gallery.push(result.data.id)
+            setGallery(gallery)
+
+            galleryImages.push(result.data.image_url)
+            setGalleryImages(galleryImages)
+
+            setDisable(false)
+            toast.success(result.message)
+            e.target.value = null
         })
     }
 
@@ -91,6 +122,11 @@ const Create = ({ placeholder }) => {
             setBrands(result.data)
         })
     }
+
+    const deleteImage = (image) => {
+        const newGallery = galleryImages.filter((img) => img !== image)
+        setGalleryImages(newGallery)
+    }        
 
     useEffect(() => {
         fetchCategories();
@@ -282,8 +318,8 @@ const Create = ({ placeholder }) => {
                                             }
                                             className='form-control'
                                             >
-                                            <option value="yes">Yes</option>
                                             <option value="no">No</option>
+                                            <option value="yes">Yes</option>
                                         </select>
                                     </div>
 
@@ -291,7 +327,26 @@ const Create = ({ placeholder }) => {
 
                                     <div className="mb-3">
                                         <label htmlFor="" className="form-label">Image</label>
-                                        <input type="file" className='form-control' />
+                                        <input 
+                                            onChange={handleFileChange}
+                                            type="file" className='form-control' />
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <div className="row">
+                                            {
+                                                galleryImages && galleryImages.map((image, index) => {
+                                                    return (
+                                                        <div key={`gallery-${index}`} className="col-md-2">
+                                                            <div className="card shadow">
+                                                                <img src={image} alt="" className="img-fluid" />                                                                
+                                                            </div>
+                                                            <button className='btn btn-danger mt-3 w-100' onClick={ () => deleteImage(image)}>Delete</button>
+                                                        </div>
+                                                    )
+                                                })
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </div>
