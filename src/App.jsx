@@ -9,6 +9,7 @@ import Checkout from './components/Checkout'
 import Login from './components/admin/Login'
 import Dashboard from './components/admin/Dashboard'
 import { AdminRequireAuth } from './components/admin/AdminRequireAuth'
+import { RequireAuth } from './components/RequireAuth'
 import {default as ShowCategories} from './components/admin/category/Show';
 import {default as CreateCategory} from './components/admin/category/Create';
 import {default as EditCategory} from './components/admin/category/Edit';
@@ -18,6 +19,10 @@ import {default as EditBrand} from './components/admin/brand/Edit';
 import {default as ShowProducts} from './components/admin/product/Show';
 import {default as CreateProduct} from './components/admin/product/Create';
 import {default as EditProduct} from './components/admin/product/Edit';
+import Register from './components/Register';
+import {default as UserLogin} from './components/Login';
+import Profile from './components/Profile';
+import Confirmation from './components/Confirmation';
 
 
 function App() {
@@ -30,8 +35,29 @@ function App() {
 					<Route path='/shop' element={<Shop />} />
 					<Route path='/product/:id' element={<Product />} />
 					<Route path='/cart' element={<Cart />} />
-					<Route path='/checkout' element={<Checkout />} />
+					<Route path='/account/register' element={<Register />} />
+					<Route path='/account/login' element={<UserLogin />} />
 					<Route path='/admin/login' element={<Login />} />
+
+					{/* // user auth routes */}
+					<Route path='/account' element={
+						<RequireAuth>
+							<Profile />
+						</RequireAuth>
+					} />
+					
+					<Route path='/checkout' element={
+						<RequireAuth>
+							<Checkout />
+						</RequireAuth>
+					} />
+
+					<Route path='/order/confirmation/:id' element={
+						<RequireAuth>
+							<Confirmation />
+						</RequireAuth>
+					} />
+					
 					
 					{/* // admin routes */}
 					<Route path='/admin/dashboard' element={

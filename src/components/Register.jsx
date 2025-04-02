@@ -1,13 +1,13 @@
 import React, {useContext} from 'react'
-import Layout from './../common/Layout'
-import { useForm } from 'react-hook-form'
-import { apiUrl } from '../common/http'
-import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
-import { AdminAuthContext } from '../context/AdminAuth'
+import Layout from './common/Layout';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { apiUrl } from './common/http';
+import { toast } from 'react-toastify';
 
-const Login = () => {
-    const {login} = useContext(AdminAuthContext);
+
+const Register = () => {
+    // const {login} = useContext(AdminAuthContext);
 
     const {
         register,
@@ -21,29 +21,26 @@ const Login = () => {
     const onSubmit = async (data) => {
         console.log(data)
 
-        const res = await fetch(apiUrl + '/admin/login', {
+        const res = await fetch(`${apiUrl}/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
-        }).then(res =>res.json())
+        })
+        .then(res =>res.json())
         .then(result => {
             console.log(result)
 
             if (result.status == 200) {
-                const adminInfo = {
-                    token: result.token,
-                    id: result.id,
-                    name: result.name
-                }
-
-                localStorage.setItem('adminInfo', JSON.stringify(adminInfo))
-                toast.success('Login successful')
-                login(adminInfo)
-                navigate('/admin/dashboard')
+                toast.success(result.message)
+                navigate('/account/login')
             } else {
                 toast.error(result.message)
+                const formErrors = result.errors;
+                Object.keys(formErrors).forEach( (field) => {
+                    setError(field, {message: formErrors[field][0]});
+                })
             }
         })
     }
@@ -52,9 +49,25 @@ const Login = () => {
         <Layout>            
             <div className="container d-flex justify-content-center py-5">
                 <div className="card shadow border-0 login">
-                    <div className="card-header">Admin Login</div>
+                    <div className="card-header">Register</div>
                     <div className="card-body p-4">
                         <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+                            <div className="mb-3">
+                                <label htmlFor="name" className="form-label">Name</label>
+                                <input 
+                                    {
+                                        ...register('name',{
+                                            required: "The name field is required" 
+                                        })
+                                    }
+                                    className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                                    type="text" 
+                                    id="name"
+                                    placeholder='Name'
+                                    autoFocus={true}  
+                                />
+                                {errors.name && <span className="invalid-feedback">{errors.name?.message}</span>}
+                            </div>
                             <div className="mb-3">
                                 <label htmlFor="email" className="form-label">Email</label>
                                 <input 
@@ -71,7 +84,6 @@ const Login = () => {
                                     type="text" 
                                     id="email"
                                     placeholder='Email'
-                                    autoFocus={true}  
                                 />
                                 {errors.email && <span className="invalid-feedback">{errors.email?.message}</span>}
                             </div>
@@ -86,7 +98,11 @@ const Login = () => {
                                 />
                                 {errors.password && <span className="invalid-feedback">{errors.password?.message}</span>}
                             </div>
-                            <button className="btn btn-secondary">Login</button>
+                            <button className="btn btn-secondary w-100">Register</button>
+
+                            <div className="d-flex justify-content-center pt-4 pb-2">
+                                Already have an account? &nbsp; <Link to="/account/login">Login</Link>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -95,4 +111,4 @@ const Login = () => {
     )
 }
 
-export default Login
+export default Register
